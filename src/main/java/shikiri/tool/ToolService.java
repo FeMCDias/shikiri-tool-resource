@@ -3,8 +3,6 @@ package shikiri.tool;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
-
-import shikiri.account.AccountController;
 import shikiri.tool.exceptions.CustomDataAccessException;
 import shikiri.tool.exceptions.CustomDataIntegrityViolationException;
 
@@ -16,9 +14,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ToolService {
-
-    @Autowired
-    private AccountController accountController;
 
     private final ToolRepository toolRepository;
 
@@ -73,7 +68,12 @@ public class ToolService {
 
     // Method to delete a tool by its ID
     @Transactional
-    public void deleteTool(String id) {
-        toolRepository.deleteById(id);
+    public Boolean deleteTool(String id) {
+        try {
+            toolRepository.deleteById(id);
+            return true;
+        } catch (DataAccessException e) {
+            throw new CustomDataAccessException("Failed to access data.");
+        }
     }
 }
