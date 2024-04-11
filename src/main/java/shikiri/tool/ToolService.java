@@ -1,79 +1,94 @@
 package shikiri.tool;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import org.springframework.transaction.annotation.Transactional;
-import shikiri.tool.exceptions.CustomDataAccessException;
-import shikiri.tool.exceptions.CustomDataIntegrityViolationException;
-
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
+import java.util.stream.Collectors;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class ToolService {
 
-    private final ToolRepository toolRepository;
+    private ToolRepository toolRepository;
+    private SecretKey secretKey;
 
-    // Constructor-based injection is recommended for better testability
     @Autowired
-    public ToolService(ToolRepository toolRepository) {
+    public ToolService(ToolRepository toolRepository, @Value("${shikiri.jwt.secret}") String secret) {
         this.toolRepository = toolRepository;
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // Method to create (or save) a tool
-    @Transactional
-    public ToolModel saveTool(ToolModel tool) {
-        try {
-            return toolRepository.save(tool);
-        } catch (DataIntegrityViolationException e) {
-            throw new CustomDataIntegrityViolationException("Failed to save tool due to data integrity violation.");
-        } catch (DataAccessException e) {
-            throw new CustomDataAccessException("Failed to access data.");
-        }
+    public Tool create(Tool toolIn, String authToken) {
+        toolIn.userId(ToolUtility.getUserIdFromToken(authToken, secretKey));
+        return toolRepository.save(new ToolModel(toolIn)).to();
     }
 
-    // Method to retrieve all tools
-    public List<ToolModel> findAllTools() {
-        return toolRepository.findAll();
+    public List<Tool> findAll(String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findAllByUserId(userId)
+                .orElseGet(Collections::emptyList) // Return an empty list if Optional is empty
+                .stream()
+                .map(ToolModel::to)
+                .collect(Collectors.toList());
     }
 
-    // Method to find a tool by its ID
-    public Optional<ToolModel> findToolById(String id) {
-        return toolRepository.findById(id);
-    }
-    
-    // Method to find tools by name containing a specific string, sorted by a criteria
-    public List<ToolModel> findToolsByNameContaining(String name, Sort sort) {
-        return toolRepository.findByNameContaining(name, sort);
+    public Tool findById(String id, String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findByIdAndUserId(id, userId)
+                .map(ToolModel::to)
+                .orElse(null); // Return null if Optional is empty
     }
 
-    // Method to find tools by category, also sorted
-    public List<ToolModel> findToolsByCategory(String category, Sort sort) {
-        return toolRepository.findByCategory(category, sort);
+    public List<Tool> findByNameContaining(String name, String sortBy, String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findByNameContainingAndUserId(name, Sort.by(sortBy), userId)
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(ToolModel::to)
+                .collect(Collectors.toList());
     }
 
-    // Method to retrieve all tools ordered by creation date in descending order
-    public List<ToolModel> findAllToolsOrderedByCreationDateDesc() {
-        return toolRepository.findAllByOrderByCreatedDateDesc();
+    public List<Tool> findByCategory(String category, String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findByCategoryAndUserId(category, userId)
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(ToolModel::to)
+                .collect(Collectors.toList());
     }
 
-    // Method to update a tool
-    @Transactional
-    public ToolModel updateTool(ToolModel tool) {
-        return toolRepository.save(tool);
+    public List<Tool> findAllOrderedByCreationDateDesc(String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findAllByUserIdOrderByCreatedDateDesc(userId)
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(ToolModel::to)
+                .collect(Collectors.toList());
     }
 
-    // Method to delete a tool by its ID
-    @Transactional
-    public Boolean deleteTool(String id) {
-        try {
-            toolRepository.deleteById(id);
-            return true;
-        } catch (DataAccessException e) {
-            throw new CustomDataAccessException("Failed to access data.");
-        }
+    public Tool update(String id, Tool toolIn, String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findByIdAndUserId(id, userId)
+                .map(existingToolModel -> {
+                    existingToolModel.name(toolIn.name())
+                                      .category(toolIn.category())
+                                      .description(toolIn.description());
+                    return toolRepository.save(existingToolModel).to();
+                })
+                .orElse(null);
+    }
+
+    public boolean delete(String id, String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findByIdAndUserId(id, userId)
+                .map(tool -> {
+                    toolRepository.deleteById(tool.id());
+                    return true;
+                })
+                .orElse(false);
     }
 }
