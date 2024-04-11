@@ -110,9 +110,9 @@ public class ToolResource implements ToolController {
     }
 
     @Override
-    public ResponseEntity<List<ToolOut>> findAllOrderedByCreationDateDesc(String authToken) {
+    public ResponseEntity<List<ToolOut>> findOrderByName(String authToken) {
         try {
-            List<Tool> tools = toolService.findAllOrderedByCreationDateDesc(authToken);
+            List<Tool> tools = toolService.findOrderByName(authToken);
             List<ToolOut> toolsOut = tools.stream().map(ToolParser::to).collect(Collectors.toList());
             return ResponseEntity.ok(toolsOut);
         } catch (InvalidTokenException e) {

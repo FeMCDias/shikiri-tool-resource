@@ -24,6 +24,6 @@ public interface ToolRepository extends CrudRepository<ToolModel, String> {
     // Find all tools by user ID and category - Can be empty
     Optional<List<ToolModel>> findByCategoryAndUserId(String category, String userId);
 
-    // Find all tools by user ID ordered by created date - Can be empty
-    Optional<List<ToolModel>> findAllByUserIdOrderByCreatedDateDesc(String userId);
+    // Find all tools by user ID ordered by name - Can be empty
+    Optional<List<ToolModel>> findByUserIdOrderByNameDesc(String userId);
 }

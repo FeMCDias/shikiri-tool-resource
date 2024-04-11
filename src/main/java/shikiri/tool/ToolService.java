@@ -17,7 +17,7 @@ public class ToolService {
     private SecretKey secretKey;
 
     @Autowired
-    public ToolService(ToolRepository toolRepository, @Value("${shikiri.jwt.secret}") String secret) {
+    public ToolService(ToolRepository toolRepository, @Value("${shikiri.jwt.secretKey}") String secret) {
         this.toolRepository = toolRepository;
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
@@ -25,6 +25,28 @@ public class ToolService {
     public Tool create(Tool toolIn, String authToken) {
         toolIn.userId(ToolUtility.getUserIdFromToken(authToken, secretKey));
         return toolRepository.save(new ToolModel(toolIn)).to();
+    }
+
+    public Tool update(String id, Tool toolIn, String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findByIdAndUserId(id, userId)
+                .map(existingToolModel -> {
+                    existingToolModel.name(toolIn.name())
+                                      .category(toolIn.category())
+                                      .description(toolIn.description());
+                    return toolRepository.save(existingToolModel).to();
+                })
+                .orElse(null);
+    }
+
+    public boolean delete(String id, String authToken) {
+        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
+        return toolRepository.findByIdAndUserId(id, userId)
+                .map(tool -> {
+                    toolRepository.deleteById(tool.id());
+                    return true;
+                })
+                .orElse(false);
     }
 
     public List<Tool> findAll(String authToken) {
@@ -61,34 +83,12 @@ public class ToolService {
                 .collect(Collectors.toList());
     }
 
-    public List<Tool> findAllOrderedByCreationDateDesc(String authToken) {
+    public List<Tool> findOrderByName(String authToken) {
         String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
-        return toolRepository.findAllByUserIdOrderByCreatedDateDesc(userId)
+        return toolRepository.findByUserIdOrderByNameDesc(userId)
                 .orElseGet(Collections::emptyList)
                 .stream()
                 .map(ToolModel::to)
                 .collect(Collectors.toList());
-    }
-
-    public Tool update(String id, Tool toolIn, String authToken) {
-        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
-        return toolRepository.findByIdAndUserId(id, userId)
-                .map(existingToolModel -> {
-                    existingToolModel.name(toolIn.name())
-                                      .category(toolIn.category())
-                                      .description(toolIn.description());
-                    return toolRepository.save(existingToolModel).to();
-                })
-                .orElse(null);
-    }
-
-    public boolean delete(String id, String authToken) {
-        String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
-        return toolRepository.findByIdAndUserId(id, userId)
-                .map(tool -> {
-                    toolRepository.deleteById(tool.id());
-                    return true;
-                })
-                .orElse(false);
     }
 }
