@@ -46,7 +46,7 @@ public class ToolModel {
         this.userId = o.userId();
     }
     
-    public Tool toDTO() {
+    public Tool to() {
         return Tool.builder()
             .id(id)
             .name(name)
