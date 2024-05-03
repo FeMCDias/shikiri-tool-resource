@@ -1,26 +1,26 @@
 server:
-port: 8080
+    port: 8080
 
 spring:
-application:
-    name: tasks
-datasource:
-    url: jdbc:postgresql://${DATABASE_HOST}:5432/${DATABASE_NAME}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:Post123321}
-    driver-class-name: org.postgresql.Driver
-flyway:
-    baseline-on-migrate: true
-    schemas: tasks
-jpa:
-    properties:
-    hibernate:
-        default_schema: tasks
+    application:
+        name: tool
+    datasource:
+        url: jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}
+        username: ${POSTGRES_USER:postgres}
+        password: ${POSTGRES_PASSWORD:Post123321}
+        driver-class-name: org.postgresql.Driver
+    flyway:
+        baseline-on-migrate: true
+        schemas: tool
+    jpa:
+        properties:
+        hibernate:
+            default_schema: tool
 
 management:
     endpoints:
         web:
-            base-path: /tasks/actuator
+            base-path: /tool/actuator
             exposure:
                 include: [ 'prometheus' ]
 
@@ -29,4 +29,4 @@ eureka:
         register-with-eureka: true
         fetch-registry: true
         service-url:
-        defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+        defaultZone: http://${DISCOVERY_HOST}:8761/eureka/
