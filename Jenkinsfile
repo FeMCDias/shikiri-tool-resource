@@ -1,7 +1,7 @@
 pipeline {
     agent any
     stages {
-        stage('Build Gateway') {
+        stage('Build Tool') {
             steps {
                 build job: 'shikiri.tool', wait: true
             }
