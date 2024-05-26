@@ -58,7 +58,7 @@ public class ToolService {
     @Cacheable(value = "toolCache", key = "#authToken")
     public List<Tool> findAll(String authToken) {
         String userId = ToolUtility.getUserIdFromToken(authToken, secretKey);
-        return toolRepository.findAllByUserId(userId)
+        return toolRepository.findByUserIdOrderByNameDesc(userId)
                 .orElseGet(Collections::emptyList)
                 .stream()
                 .map(ToolModel::to)
