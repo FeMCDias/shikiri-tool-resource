@@ -17,10 +17,11 @@ public class ToolResource implements ToolController {
     private ToolService toolService;
 
     @Override
-    public ResponseEntity<ToolOut> create(String authToken, ToolIn toolIn) {
+    public ResponseEntity<ToolOut> create(String userId, ToolIn toolIn) {
         try {
             Tool tool = ToolParser.to(toolIn);
-            tool = toolService.create(tool, authToken);
+            tool.userId(userId);
+            tool = toolService.create(tool);
             URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -35,10 +36,10 @@ public class ToolResource implements ToolController {
     }
 
     @Override
-    public ResponseEntity<ToolOut> update(String authToken, ToolIn toolIn) {
+    public ResponseEntity<ToolOut> update(ToolIn toolIn) {
         try {
             Tool tool = ToolParser.to(toolIn);
-            tool = toolService.update(tool.id(), tool, authToken);
+            tool = toolService.update(tool.id(), tool);
             if (tool != null) {
                 return ResponseEntity.ok(ToolParser.to(tool));
             } else {
@@ -52,9 +53,9 @@ public class ToolResource implements ToolController {
     }
 
     @Override
-    public ResponseEntity<ToolOut> delete(String authToken, String id) {
+    public ResponseEntity<ToolOut> delete(String id) {
         try {
-            boolean deleted = toolService.delete(id, authToken);
+            boolean deleted = toolService.delete(id);
             if (deleted) {
                 return ResponseEntity.noContent().build();
             } else {
@@ -68,9 +69,9 @@ public class ToolResource implements ToolController {
     }
 
     @Override
-    public ResponseEntity<ToolOut> getById(String authToken, String id) {
+    public ResponseEntity<ToolOut> getById(String id) {
         try {
-            Tool tool = toolService.findById(id, authToken);
+            Tool tool = toolService.findById(id);
             if (tool != null) {
                 return ResponseEntity.ok(ToolParser.to(tool));
             } else {
@@ -84,9 +85,9 @@ public class ToolResource implements ToolController {
     }
 
     @Override
-    public ResponseEntity<List<ToolOut>> findByNameContaining(String authToken, String name, String sortBy) {
+    public ResponseEntity<List<ToolOut>> findByNameContaining(String name, String userId, String sortBy) {
         try {
-            List<Tool> tools = toolService.findByNameContaining(name, sortBy, authToken);
+            List<Tool> tools = toolService.findByNameContaining(name, userId, sortBy);
             List<ToolOut> toolsOut = tools.stream().map(ToolParser::to).collect(Collectors.toList());
             return ResponseEntity.ok(toolsOut);
         } catch (InvalidTokenException e) {
@@ -97,9 +98,9 @@ public class ToolResource implements ToolController {
     }
 
     @Override
-    public ResponseEntity<List<ToolOut>> findByCategory(String authToken, String category, String sortBy) {
+    public ResponseEntity<List<ToolOut>> findByCategory(String category, String userId, String sortBy) {
         try {
-            List<Tool> tools = toolService.findByCategory(category, authToken);
+            List<Tool> tools = toolService.findByCategory(category, userId, sortBy);
             List<ToolOut> toolsOut = tools.stream().map(ToolParser::to).collect(Collectors.toList());
             return ResponseEntity.ok(toolsOut);
         } catch (InvalidTokenException e) {
@@ -110,9 +111,9 @@ public class ToolResource implements ToolController {
     }
 
     @Override
-    public ResponseEntity<List<ToolOut>> findOrderByName(String authToken) {
+    public ResponseEntity<List<ToolOut>> findOrderByName(String userId) {
         try {
-            List<Tool> tools = toolService.findOrderByName(authToken);
+            List<Tool> tools = toolService.findOrderByName(userId);
             List<ToolOut> toolsOut = tools.stream().map(ToolParser::to).collect(Collectors.toList());
             return ResponseEntity.ok(toolsOut);
         } catch (InvalidTokenException e) {

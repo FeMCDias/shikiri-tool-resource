@@ -16,11 +16,11 @@ public interface ToolRepository extends CrudRepository<ToolModel, String> {
     Optional<List<ToolModel>> findByUserIdOrderByNameDesc(String userId);
     
     // Find a tool by ID and user ID - Can be Empty
-    Optional<ToolModel> findByIdAndUserId(String id, String userId);
+    Optional<ToolModel> findById(String id);
 
     // Find all tools by user ID and name containing - Can be empty
-    Optional<List<ToolModel>> findByNameContainingAndUserId(String name, Sort sort, String userId);
+    Optional<List<ToolModel>> findByNameContainingAndUserId(String name, String userId, Sort sort);
 
     // Find all tools by user ID and category - Can be empty
-    Optional<List<ToolModel>> findByCategoryAndUserId(String category, String userId);
+    Optional<List<ToolModel>> findByCategoryAndUserId(String category, String userId, Sort sort);
 }

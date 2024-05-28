@@ -7,7 +7,6 @@ public class ToolParser {
             .name(in.name())
             .category(in.category())
             .description(in.description())
-            .userId(in.userId())
             .build();
     }
 
@@ -15,6 +14,8 @@ public class ToolParser {
         return ToolOut.builder()
             .id(tool.id())
             .name(tool.name())
+            .category(tool.category())
+            .description(tool.description())
             .userId(tool.userId())
             .build();
     }
